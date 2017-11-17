@@ -2,14 +2,74 @@
 
 @section('pageTitle', 'Операции')
 @section('content')
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.slim.js"></script>
     <script>
         var route = '{{ route('home') }}';
         var message = 'Вы точно хотите удалить данное сообщение?';
+        $(function(){
+        	var state = 1;
+			$(document).on('click', '#SelectAll', function(){
+				var form = $(this).closest('form');
+				if(state == 1){
+					form.find('input[type=checkbox]').not(":disabled").attr( "checked" , true)
+					state = 0;
+				}else{
+					form.find('input[type=checkbox]').not(":disabled").attr( "checked" , false)
+					state = 1;			
+				}
+			});
+
+			$(document).on('click', '.MyAction', function(){
+				var action = $(this).data('action');
+				var form = $(this).closest('form');
+				form.attr('action', action);
+				form.submit();
+			});
+
+			$(document).on('click', '.ResetForm', function(){
+				var form = $(this).closest('form');
+				form.trigger("reset");
+				clearForm(form[0]);
+			});
+        });
+
+        function clearForm(myFormElement) {
+			var elements = myFormElement.elements;
+			myFormElement.reset();
+			for(i=0; i<elements.length; i++) {
+				field_type = elements[i].type.toLowerCase();
+				switch(field_type) {
+					case "text":
+					case "password":
+					case "textarea":
+					case "hidden":
+						elements[i].value = "";
+					break;
+					case "radio":
+					case "checkbox":
+					if (elements[i].checked) {
+						elements[i].checked = false;
+					}
+					break;
+					case "select-one":
+					case "select-multi":
+						elements[i].selectedIndex = -1;
+					break;
+					default:
+					break;
+				}
+			}
+		}
     </script>
+
     <div class="row">
         <!-- Column -->
         <div class="col-12">
-
+			<div class="row m-b-10">
+                <div class="col-md-12">
+                    <a href="http://localhost:3001/admin/deposits/create" class="btn pull-right hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
+                </div>
+            </div>
 	    	<div class="card">
 	        	<div class="card-block wizard-content">
 	                <form method="GET" action="{{route('AdminWithdrawOrders')}}">
@@ -79,7 +139,7 @@
 		                    		<button type="submit" class="btn btn-block btn-success">Отобразить</button>
 		                    	</div>
 		                    	<div class="col-md-3">
-		                    		<button type="reset" class="btn btn-block btn-info">Сбросить</button>
+		                    		<button type="button" class="btn btn-block btn-info ResetForm">Сбросить</button>
 		                    	</div>
 		                    </div>
 		                </section>
@@ -91,17 +151,25 @@
 
             <div class="card">
                 <div class="card-block">
-                	<form method="POST" action="">
+					@if(Session::has('success'))
+                        <div class="alert alert-important alert-success alert-rounded">{{Session::get('success')}}</div>     	
+	                @endif   
+	                @if(Session::has('error'))
+                        <div class="alert alert-important alert-danger alert-rounded">{{Session::get('error')}}</div>     	
+	                @endif                	
+                	<form class="FormOperations" method="POST" action="">
+                        {{ csrf_field() }}
                         <div class="table-responsive">
 	                        <table class="table">
 	                            <thead>
 	                                <tr>
 	                                    <th class="text-center">
 	                                    	@if(!$history->isEmpty())
-	                                    		<button type="button" id="SelectAllPaymentSystem" class="btn btn-sm btn-success">Select all</button>
+	                                    		<button type="button" id="SelectAll" class="btn btn-sm btn-success">Select all</button>
 	                                    	@endif
 	                                    </th>
 	                                    <th>#</th>
+	                                    <th>Операция</th>
 	                                    <th>Пользователь</th>
 	                                    <th>Сумма</th>
 	                                    <th>Дата</th>
@@ -113,9 +181,13 @@
 		                                @foreach($history as $row)
 			                                <tr class="active">
 			                                	<td class="text-center">
-			                                		<input id="checkbox0" name="application[]" type="checkbox">
+			                                		<input value="{{$row->id}}" id="checkbox0" name="application[]" type="checkbox">
 			                                	</td>
 			                                    <td scope="row">{{$row->id}}</td>
+			                                    <td>
+			                                    	{{$operations[$row->type]}}
+			                                    	<br/><a href="">Данные операции</a>
+			                                    </td>
 			                                    <td>
 			                                    	<a target="_blank" href="{{route('AdminUsersEdit', $row->user_id)}}">{{$row->email}}</a><br/>
 			                                    	@if(isset($row->data_info->wallet))
@@ -129,7 +201,7 @@
 		                                @endforeach
 	                                @else
 	                                	<tr>
-	                                		<td colspan="6">
+	                                		<td colspan="7">
 	                                			<div class="alert alert-important alert-warning text-center">
 							                        <h4>Операций не найдено</h4>
 							                    </div>
@@ -141,9 +213,9 @@
                         </div>
 						<div class="form-actions">
 							<div class="row">
-								<div class="col-md-4"><button type="submit" class="btn btn-block btn-success">Выполнить</button></div>
-								<div class="col-md-4"><button type="submit" class="btn btn-block btn-info">Изменить статус на готово</button></div>
-								<div class="col-md-4"><button type="button" class="btn btn-block btn-danger">Отменить операцию</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
 							</div>
                         </div>  
                     </form>                      

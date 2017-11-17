@@ -9,7 +9,10 @@ use App\Models\Users_History;
 use App\Models\Payment_System;
 use Cookie;
 use Illuminate\Cookie\CookieJar;
-
+use Withdraw;
+use App\Libraries\Deposit;
+use App\Jobs\ProcessWithdraw;
+use Carbon\Carbon;
 class WithdrawOrdersController extends Controller
 {
 	public function index(CookieJar $cookieJar, Request $request)
@@ -35,7 +38,7 @@ class WithdrawOrdersController extends Controller
 					$query->where('users.email', $user_email);
 				}
 				if($transaction_id != ''){
-					$query->where('users__histories.data_info->transaction', $transaction_id);
+					$query->where('users__histories.transaction', $transaction_id);
 				}
 				if($wallet != ''){
 					$query->where('users__histories.data_info->wallet', $wallet);
@@ -90,6 +93,7 @@ class WithdrawOrdersController extends Controller
 
 		$statuses = Users_History::selectRaw('DISTINCT status')->get();
 
+
 		$payment_systems = Payment_System::orderBy('sort', 'asc')->get();
 
 		return view('withdraw_orders::index')->with([
@@ -106,5 +110,76 @@ class WithdrawOrdersController extends Controller
 			"type"            => $type,
 			"status"          => $status,
 		]);
+	}
+
+	public function done(Request $request){
+		if(count($request->input('application')) > 0){
+			foreach($request->input('application') as $row){
+				$history = Users_History::where('id', $row)->where('status', '<>','completed')->first();
+				if($history){
+					$history->status = 'completed';
+					$history->save();
+				}
+	    	}	
+
+			\Session::flash('success','Статус изменен на completed');
+		}
+		return redirect()->back();    		
+	}
+
+	public function cancel(Request $request){
+		if(count($request->input('application')) > 0){
+			foreach($request->input('application') as $row){
+				$history = Users_History::where('id', $row)->first();
+				if($history){
+					if ($history->type == 'WITHDRAW') {
+						try{
+							Withdraw::history($history)->cancel();
+						}catch(\Exception $e){
+							\Session::flash('error',$e->getMessage());
+							return redirect()->back();
+						}
+					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status == 'pending') {
+						$history->status = 'cancel';
+						$history->save();
+					}
+				}
+	    	}
+	    	\Session::flash('success','Заявки были успешно отменены');
+		}
+
+		return redirect()->back();    			
+	}
+
+	public function confirm(Request $request){
+		if(count($request->input('application')) > 0){
+			foreach($request->input('application') as $row){
+				$history = Users_History::where('id', $row)->first();
+				if($history){
+					if ($history->type == 'WITHDRAW' && in_array($history->status, ['pending', 'error'])) {					
+						if(env('USE_QUEUE_WITHDRAW')){
+							ProcessWithdraw::dispatch($history);
+						}else{
+							Withdraw::history($history)->done_withdraw();	
+						}						
+					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status != 'completed') {
+						try{
+							(new Deposit)
+								->amount($history->amount)
+								->payment_id($history->id)
+								->payment_system($history->payment_system)
+								->transaction('by admin')
+								->create();
+						}catch(\App\Exceptions\NotFoudDepositPlan $e){
+							\Session::flash('error',$e->getMessage());
+							return redirect()->back();					            
+				        }													
+					}
+				}
+	    	}
+	    	\Session::flash('success','Операции были(а) отпралена в очередь или(и) выполнены');
+		}
+
+		return redirect()->back();    					
 	}
 }
