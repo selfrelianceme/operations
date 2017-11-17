@@ -1,10 +1,10 @@
 {
-  "name": "selfreliance/withdraw_orders",
+  "name": "selfreliance/operations",
   "type": "library",
   "version": "0.0.1",
-  "description": "Withdraw orders for laravel",
+  "description": "operations applications",
   "keywords": ["laravel"],
-  "homepage": "https://github.com/selfrelianceme/withdraw_orders",
+  "homepage": "https://github.com/selfrelianceme/operations",
   "license": "MIT",
   "authors": [
     {
@@ -15,7 +15,7 @@
   "extra": {
       "laravel":{
           "providers": [
-            "Selfreliance\\WithdrawOrders\\WithdrawOrdersServiceProvider"
+            "Selfreliance\\Operations\\OperationsServiceProvider"
           ]
       }
   },
@@ -26,6 +26,6 @@
     "phpunit/phpunit": "~4.8"
   },
   "autoload": {
-    "psr-4": {"Selfreliance\\WithdrawOrders\\": "src/"}
+    "psr-4": {"Selfreliance\\Operations\\": "src/"}
   }
 }

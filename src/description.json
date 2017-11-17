@@ -1,5 +1,5 @@
 {
-  "package": "withdraw_orders",
+  "package": "operations",
   "name": "Операции",
-  "icon": "mdi mdi-headset"
+  "icon": "mdi mdi-clipboard-text"
 }

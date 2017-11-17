@@ -1,6 +1,6 @@
 <?php
 
-namespace Selfreliance\WithdrawOrders;
+namespace Selfreliance\Operations;
 
 use App\Http\Controllers\Controller;
 use App\User;
@@ -13,7 +13,7 @@ use Withdraw;
 use App\Libraries\Deposit;
 use App\Jobs\ProcessWithdraw;
 use Carbon\Carbon;
-class WithdrawOrdersController extends Controller
+class OperationsController extends Controller
 {
 	public function index(CookieJar $cookieJar, Request $request)
 	{
@@ -96,7 +96,7 @@ class WithdrawOrdersController extends Controller
 
 		$payment_systems = Payment_System::orderBy('sort', 'asc')->get();
 
-		return view('withdraw_orders::index')->with([
+		return view('operations::index')->with([
 			"history"         => $history,
 			"operations"      => $operations,
 			"statuses"        => $statuses,

@@ -72,7 +72,7 @@
             </div>
 	    	<div class="card">
 	        	<div class="card-block wizard-content">
-	                <form method="GET" action="{{route('AdminWithdrawOrders')}}">
+	                <form method="GET" action="{{route('AdminOperations')}}">
 		                {{ csrf_field() }}
 		                <section>
 		                    <div class="row">
@@ -213,9 +213,9 @@
                         </div>
 						<div class="form-actions">
 							<div class="row">
-								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
-								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
-								<div class="col-md-4"><button data-action="{{route('AdminWithdrawOrdersCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminOperationsConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminOperationsStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
+								<div class="col-md-4"><button data-action="{{route('AdminOperationsCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
 							</div>
                         </div>  
                     </form>                      

@@ -1,10 +1,10 @@
 <?php
 
-namespace Selfreliance\WithdrawOrders;
+namespace Selfreliance\Operations;
 
 use Illuminate\Support\ServiceProvider;
 
-class WithdrawOrdersServiceProvider extends ServiceProvider
+class OperationsServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
@@ -15,8 +15,8 @@ class WithdrawOrdersServiceProvider extends ServiceProvider
     {
         //
         include __DIR__.'/routes.php';
-        $this->app->make('Selfreliance\WithdrawOrders\WithdrawOrdersController');
-        $this->loadViewsFrom(__DIR__.'/views', 'withdraw_orders');
+        $this->app->make('Selfreliance\Operations\OperationsController');
+        $this->loadViewsFrom(__DIR__.'/views', 'operations');
         
     }
 
