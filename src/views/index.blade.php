@@ -31,6 +31,12 @@
 				form.trigger("reset");
 				clearForm(form[0]);
 			});
+
+			$(document).on('click', '.do_sorting', function(){
+				var route = $(this).data('route');
+				window.location.href = route;
+				return false;
+			});
         });
 
         function clearForm(myFormElement) {
@@ -160,7 +166,7 @@
                 	<form class="FormOperations" method="POST" action="">
                         {{ csrf_field() }}
                         <div class="table-responsive">
-	                        <table class="table">
+	                        <table class="nowrap table table-hover table-striped table-bordered dataTable">
 	                            <thead>
 	                                <tr>
 	                                    <th class="text-center">
@@ -168,11 +174,14 @@
 	                                    		<button type="button" id="SelectAll" class="btn btn-sm btn-success">Select all</button>
 	                                    	@endif
 	                                    </th>
-	                                    <th>#</th>
+	                                    <th 
+	                                    	class="do_sorting sorting{{($sort=='id')?'_'.$order:NULL}}" 
+	                                    	data-route="{{route('AdminOperations', ['sort' => 'id', 'order' => ($sort=='id' && $order=='asc')?'desc':'asc'])}}"
+	                                    >#</th>
 	                                    <th>Операция</th>
 	                                    <th>Пользователь</th>
-	                                    <th>Сумма</th>
-	                                    <th>Дата</th>
+	                                    <th class="do_sorting sorting{{($sort=='amount')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'amount', 'order' => ($sort=='amount' && $order=='asc')?'desc':'asc'])}}">Сумма</th>
+	                                    <th class="do_sorting sorting{{($sort=='created_at')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'created_at', 'order' => ($sort=='created_at' && $order=='asc')?'desc':'asc'])}}">Дата</th>
 	                                    <th>Статус</th>
 	                                </tr>
 	                            </thead>

@@ -27,9 +27,23 @@ class OperationsController extends Controller
 
 		// $cookieJar->queue(cookie('application_id', $application_id, 45000));
 
+		$sort = "id";
+		$order = "asc";
+		if($request->input('sort') && $request->input('order')){
+			$sort = $request->input('sort');
+			$order = $request->input('order');
+			$cookieJar->queue(cookie('sort', $sort, 45000));
+			$cookieJar->queue(cookie('order', $order, 45000));
+		}else{
+			if(Cookie::get('sort') && Cookie::get('order')){
+				$sort = Cookie::get('sort');
+				$order = Cookie::get('order');
+			}
+		}
+
 		$history = Users_History::leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')
 			->leftJoin('users', 'users.id', '=', 'users__histories.user_id')
-			->orderBy('id', 'asc')
+			->orderBy("users__histories.".$sort, $order)
 			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status){
 				if($application_id != ''){
 					$query->where('users__histories.id', $application_id);
@@ -101,7 +115,7 @@ class OperationsController extends Controller
 			"operations"      => $operations,
 			"statuses"        => $statuses,
 			"payment_systems" => $payment_systems,
-
+			
 			"application_id"  => $application_id,
 			"user_email"      => $user_email,
 			"transaction_id"  => $transaction_id,
@@ -109,6 +123,9 @@ class OperationsController extends Controller
 			"payment_system"  => $payment_system,
 			"type"            => $type,
 			"status"          => $status,
+			
+			"sort"            => $sort,
+			"order"           => $order,
 		]);
 	}
 
