@@ -37,6 +37,18 @@
 				window.location.href = route;
 				return false;
 			});
+
+			$(document).on('click', '.show_info_transaction', function(){
+				var tr = $(this).data('transaction');
+				var data = $(this).data();
+				console.log(data);
+				$('.modal-body').html('');
+				$.each(data, function(i, el){
+					if(i != 'toggle' && el != ''){
+						$('.modal-body').append('<p>'+i+': '+data[i]+'</p>');
+					}
+				});
+			});
         });
 
         function clearForm(myFormElement) {
@@ -67,6 +79,20 @@
 			}
 		}
     </script>
+
+	<div class="modal fade" id="informationTransaction" aria-hidden="true">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+                <div class="modal-header">Информация о транзакции</div>
+                <div class="modal-body">
+                    <p class="transaction hide">Транзакция: <span></span></p>
+                    <p class="amount hide">Сумма: <span></span></p>
+                    <p class="amount_default hide">Сумма в USD: <span></span></p>
+                </div>
+	        </div>
+	    </div>
+	</div>
+
 
     <div class="row">
         <!-- Column -->
@@ -195,7 +221,15 @@
 			                                    <td scope="row">{{$row->id}}</td>
 			                                    <td>
 			                                    	{{$operations[$row->type]}}
-			                                    	<br/><a href="">Данные операции</a>
+			                                    	<br/><a href="#informationTransaction" class="show_info_transaction" data-transaction="{{$row->transaction}}" 
+													@if($row->data_info)
+														@foreach($row->data_info as $key=>$val)
+															@if(isset($key) && isset($val))
+																data-{{$key}}="@if(!is_object($val)) {!!$val!!} @endif"
+															@endif
+														@endforeach
+													@endif
+			                                    	data-toggle="modal" href="">Данные операции</a>
 			                                    </td>
 			                                    <td>
 			                                    	<a target="_blank" href="{{route('AdminUsersEdit', $row->user_id)}}">{{$row->email}}</a><br/>
