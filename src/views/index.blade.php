@@ -2,114 +2,119 @@
 
 @section('pageTitle', 'Операции')
 @section('content')
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.slim.js"></script>
-    <script>
-        var route = '{{ route('home') }}';
-        var message = 'Вы точно хотите удалить данное сообщение?';
-        $(function(){
-        	var state = 1;
-			$(document).on('click', '#SelectAll', function(){
-				var form = $(this).closest('form');
-				if(state == 1){
-					form.find('input[type=checkbox]').not(":disabled").attr( "checked" , true)
-					state = 0;
-				}else{
-					form.find('input[type=checkbox]').not(":disabled").attr( "checked" , false)
-					state = 1;			
-				}
-			});
-
-			$(document).on('click', '.MyAction', function(){
-				var action = $(this).data('action');
-				var form = $(this).closest('form');
-				form.attr('action', action);
-				form.submit();
-			});
-
-			$(document).on('click', '.ResetForm', function(){
-				var form = $(this).closest('form');
-				form.trigger("reset");
-				clearForm(form[0]);
-			});
-
-			$(document).on('click', '.do_sorting', function(){
-				var route = $(this).data('route');
-				window.location.href = route;
-				return false;
-			});
-
-			$(document).on('click', '.show_info_transaction', function(){
-				var tr = $(this).data('transaction');
-				var data = $(this).data();
-				console.log(data);
-				$('.modal-body').html('');
-				$.each(data, function(i, el){
-					var title = i;
-					switch(i){
-						case 'full_data_ipn':
-							title = 'Данные из платежной системы';
-						break;
-
-						case 'deposit_id':
-							title = 'Идентификатор депозита';
-						break;
-
-						case 'plan_id':
-							title = 'Идентификатор плана';
-						break;
-
-						case 'address':
-							title = 'Адресс для платежа';
-						break;
-
-						case 'transaction':
-							title = 'Транзакция';
-						break;
-
-						default:
-
-						break;
-					}
-					if(i != 'toggle' && el != ''){
-						if(i == 'full_data_ipn'){
-							$('.modal-body').append('<div class="form-group"><label>'+title+'</label><textarea style="height: 250px;" class="form-control">'+data[i]+'</textarea></div>');
-						}else{
-							$('.modal-body').append('<p>'+title+': '+data[i]+'</p>');	
-						}
-						
+	@push('scripts')
+	    <script>
+	        var route = '{{ route('home') }}';
+	        var message = 'Вы точно хотите удалить данное сообщение?';
+	        $(function(){
+	        	var state = 1;
+				$(document).on('click', '#SelectAll', function(){
+					var form = $(this).closest('form');
+					if(state == 1){
+						form.find('input[type=checkbox]').not(":disabled").attr( "checked" , true)
+						state = 0;
+					}else{
+						form.find('input[type=checkbox]').not(":disabled").attr( "checked" , false)
+						state = 1;			
 					}
 				});
-			});
-        });
 
-        function clearForm(myFormElement) {
-			var elements = myFormElement.elements;
-			myFormElement.reset();
-			for(i=0; i<elements.length; i++) {
-				field_type = elements[i].type.toLowerCase();
-				switch(field_type) {
-					case "text":
-					case "password":
-					case "textarea":
-					case "hidden":
-						elements[i].value = "";
-					break;
-					case "radio":
-					case "checkbox":
-					if (elements[i].checked) {
-						elements[i].checked = false;
+				$(document).on('click', '.MyAction', function(){
+					var action = $(this).data('action');
+					var form = $(this).closest('form');
+					form.attr('action', action);
+					form.submit();
+				});
+
+				$(document).on('click', '.ResetForm', function(){
+					var form = $(this).closest('form');
+					form.trigger("reset");
+					clearForm(form[0]);
+					form.submit();
+				});
+
+				$(document).on('click', '.do_sorting', function(){
+					var route = $(this).data('route');
+					window.location.href = route;
+					return false;
+				});
+
+				$(document).on('click', '.show_info_transaction', function(){
+					var tr = $(this).data('transaction');
+					var data = $(this).data();
+					$('.modal-body').html('');
+					$.each(data, function(i, el){
+						var title = i;
+						switch(i){
+							case 'full_data_ipn':
+								title = 'Данные из платежной системы';
+							break;
+
+							case 'deposit_id':
+								title = 'Идентификатор депозита';
+							break;
+
+							case 'plan_id':
+								title = 'Идентификатор плана';
+							break;
+
+							case 'address':
+								title = 'Адресс для платежа';
+							break;
+
+							case 'transaction':
+								title = 'Транзакция';
+							break;
+
+							default:
+
+							break;
+						}
+						if(i != 'toggle' && el != ''){
+							if(i == 'full_data_ipn'){
+								$('.modal-body').append('<div class="form-group"><label>'+title+'</label><textarea style="height: 250px;" class="form-control">'+data[i]+'</textarea></div>');
+							}else{
+								$('.modal-body').append('<p>'+title+': '+data[i]+'</p>');	
+							}
+							
+						}
+					});
+				});
+	        });
+
+	        function clearForm(myFormElement) {
+				var elements = myFormElement.elements;
+				myFormElement.reset();
+				for(i=0; i<elements.length; i++) {
+					field_type = elements[i].type.toLowerCase();
+					switch(field_type) {
+						case "text":
+						case "password":
+						case "textarea":
+						case "hidden":
+							elements[i].value = "";
+						break;
+						case "radio":
+						case "checkbox":
+						if (elements[i].checked) {
+							elements[i].checked = false;
+						}
+						break;
+						case "select-one":
+						case "select-multi":
+							elements[i].selectedIndex = -1;
+						break;
+						default:
+						break;
 					}
-					break;
-					case "select-one":
-					case "select-multi":
-						elements[i].selectedIndex = -1;
-					break;
-					default:
-					break;
 				}
 			}
-		}
-    </script>
+	    </script>
+	@endpush
+	
+	@push('display')
+    	<a href="http://localhost:3001/admin/deposits/create" class="btn hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
+    @endpush
 
 	<div class="modal fade bs-example-modal-lg" id="informationTransaction" aria-hidden="true">
 	    <div class="modal-dialog modal-lg">
@@ -128,11 +133,6 @@
     <div class="row">
         <!-- Column -->
         <div class="col-12">
-			<div class="row m-b-10">
-                <div class="col-md-12">
-                    <a href="http://localhost:3001/admin/deposits/create" class="btn pull-right hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
-                </div>
-            </div>
 	    	<div class="card">
 	        	<div class="card-block wizard-content">
 	                <form method="GET" action="{{route('AdminOperations')}}">
