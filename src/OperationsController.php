@@ -174,6 +174,8 @@ class OperationsController extends Controller
 				$history = Users_History::where('id', $row)->first();
 				if($history){
 					if ($history->type == 'WITHDRAW' && in_array($history->status, ['pending', 'error'])) {					
+						$history->status = 'in_queue';
+						$history->save();
 						if(env('USE_QUEUE_WITHDRAW')){
 							ProcessWithdraw::dispatch($history);
 						}else{

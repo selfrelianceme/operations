@@ -44,8 +44,39 @@
 				console.log(data);
 				$('.modal-body').html('');
 				$.each(data, function(i, el){
+					var title = i;
+					switch(i){
+						case 'full_data_ipn':
+							title = 'Данные из платежной системы';
+						break;
+
+						case 'deposit_id':
+							title = 'Идентификатор депозита';
+						break;
+
+						case 'plan_id':
+							title = 'Идентификатор плана';
+						break;
+
+						case 'address':
+							title = 'Адресс для платежа';
+						break;
+
+						case 'transaction':
+							title = 'Транзакция';
+						break;
+
+						default:
+
+						break;
+					}
 					if(i != 'toggle' && el != ''){
-						$('.modal-body').append('<p>'+i+': '+data[i]+'</p>');
+						if(i == 'full_data_ipn'){
+							$('.modal-body').append('<div class="form-group"><label>'+title+'</label><textarea style="height: 250px;" class="form-control">'+data[i]+'</textarea></div>');
+						}else{
+							$('.modal-body').append('<p>'+title+': '+data[i]+'</p>');	
+						}
+						
 					}
 				});
 			});
@@ -80,10 +111,10 @@
 		}
     </script>
 
-	<div class="modal fade" id="informationTransaction" aria-hidden="true">
-	    <div class="modal-dialog">
+	<div class="modal fade bs-example-modal-lg" id="informationTransaction" aria-hidden="true">
+	    <div class="modal-dialog modal-lg">
 	        <div class="modal-content">
-                <div class="modal-header">Информация о транзакции</div>
+                <div class="modal-header">Информация об операции</div>
                 <div class="modal-body">
                     <p class="transaction hide">Транзакция: <span></span></p>
                     <p class="amount hide">Сумма: <span></span></p>
@@ -225,7 +256,11 @@
 													@if($row->data_info)
 														@foreach($row->data_info as $key=>$val)
 															@if(isset($key) && isset($val))
-																data-{{$key}}="@if(!is_object($val)) {!!$val!!} @endif"
+																@if($key == 'full_data_ipn')
+																	data-{{$key}}='{{print_r(json_decode($val, true), true)}}'
+																@else
+																	data-{{$key}}='@if(!is_object($val)) {!!$val!!} @endif'
+																@endif
 															@endif
 														@endforeach
 													@endif
