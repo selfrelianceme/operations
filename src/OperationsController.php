@@ -173,14 +173,14 @@ class OperationsController extends Controller
 			foreach($request->input('application') as $row){
 				$history = Users_History::where('id', $row)->first();
 				if($history){
-					if ($history->type == 'WITHDRAW' && in_array($history->status, ['pending', 'error'])) {					
-						// $history->status = 'in_queue';
-						// $history->save();
+					if ($history->type == 'WITHDRAW' && in_array($history->status, ['pending', 'error', 'in_queue'])) {
+						$history->status = 'in_queue';
+						$history->save();
 						if(env('USE_QUEUE_WITHDRAW')){
 							ProcessWithdraw::dispatch($history);
 						}else{
 							Withdraw::history($history)->done_withdraw();	
-						}						
+						}
 					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status != 'completed') {
 						try{
 							(new Deposit)
