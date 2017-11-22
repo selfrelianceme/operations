@@ -15,16 +15,29 @@ use App\Jobs\ProcessWithdraw;
 use Carbon\Carbon;
 class OperationsController extends Controller
 {
+	function __construct(){
+		$pending = Withdraw::getOperationsPending();
+		$compleated = Withdraw::getOperationsCompleated();
+		\Blocks::register('Operations', function() use ($pending, $compleated){
+			if($pending == 0){
+				$percent = 0;
+			}else{
+				$percent = 100*$compleated/$pending;
+			}
+			return view('operations::withdraw')->with(
+				compact('pending', 'compleated', 'percent')
+			)->render();
+		});
+	}
 	public function index(CookieJar $cookieJar, Request $request)
 	{
 		$application_id = ($request->input('application_id'))?$request->input('application_id'):"";
 		$user_email     = ($request->input('user_email'))?$request->input('user_email'):"";
 		$transaction_id = ($request->input('transaction_id'))?$request->input('transaction_id'):"";
 		$wallet = ($request->input('wallet'))?$request->input('wallet'):"";
-		$payment_system = ($request->input('payment_system'))?$request->input('payment_system'):"";
-		$type = ($request->input('type'))?$request->input('type'):"";
-		$status = ($request->input('status'))?$request->input('status'):"";
-
+		$payment_system = ($request->input('payment_system'))?$request->input('payment_system'):[];
+		$type = ($request->input('type'))?$request->input('type'):[];
+		$status = ($request->input('status'))?$request->input('status'):[];
 		// $cookieJar->queue(cookie('application_id', $application_id, 45000));
 
 		$sort = "id";
@@ -40,31 +53,52 @@ class OperationsController extends Controller
 				$order = Cookie::get('order');
 			}
 		}
-
+		// dd(count($type));
 		$history = Users_History::leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')
 			->leftJoin('users', 'users.id', '=', 'users__histories.user_id')
 			->orderBy("users__histories.".$sort, $order)
 			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status){
 				if($application_id != ''){
-					$query->where('users__histories.id', $application_id);
+					$tmp = explode(",", $application_id);
+					if(count($tmp) > 0){
+						$application_id = $tmp;
+					}
+					$query->whereIn('users__histories.id', $application_id);
 				}
 				if($user_email != ''){
-					$query->where('users.email', $user_email);
+					$tmp = explode(",", $user_email);
+					if(count($tmp) > 0){
+						$user_email = $tmp;
+					}
+					$query->whereIn('users.email', $user_email);
 				}
 				if($transaction_id != ''){
-					$query->where('users__histories.transaction', $transaction_id);
+					$tmp = explode(",", $transaction_id);
+					if(count($tmp) > 0){
+						$transaction_id = $tmp;
+					}
+					$query->whereIn('users__histories.transaction', $transaction_id);
 				}
 				if($wallet != ''){
 					$query->where('users__histories.data_info->wallet', $wallet);
 				}
-				if($payment_system != ''){
-					$query->where('users__histories.payment_system', $payment_system);
+				if(count($payment_system) > 0){
+					if($payment_system[0] == null) unset($payment_system[0]);
+					if(count($payment_system) > 0){
+						$query->whereIn('users__histories.payment_system', $payment_system);
+					}
 				}
-				if($type != ''){
-					$query->where('users__histories.type', $type);
+				if(count($type) > 0){
+					if($type[0] == null) unset($type[0]);
+					if(count($type) > 0){
+						$query->whereIn('users__histories.type', $type);
+					}
 				}
-				if($status != ''){
-					$query->where('users__histories.status', $status);
+				if(count($status) > 0){
+					if($status[0] == null) unset($status[0]);
+					if(count($status) > 0){
+						$query->whereIn('users__histories.status', $status);
+					}
 				}
 			})
 			->paginate(10, array(
@@ -75,6 +109,7 @@ class OperationsController extends Controller
 	        ));
         $history->appends(['application_id' => $application_id]);
         $history->appends(['user_email' => $user_email]);
+        $history->appends(['payment_system' => $payment_system]);
         $history->appends(['transaction_id' => $transaction_id]);
         $history->appends(['wallet' => $wallet]);
         $history->appends(['type' => $type]);
