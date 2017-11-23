@@ -212,7 +212,8 @@ class OperationsController extends Controller
 						$history->status = 'in_queue';
 						$history->save();
 						if(env('USE_QUEUE_WITHDRAW')){
-							ProcessWithdraw::dispatch($history);
+							$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
+							ProcessWithdraw::dispatch($history, $wallet);
 						}else{
 							Withdraw::history($history)->done_withdraw();	
 						}
