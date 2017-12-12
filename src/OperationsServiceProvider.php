@@ -17,7 +17,9 @@ class OperationsServiceProvider extends ServiceProvider
         include __DIR__.'/routes.php';
         $this->app->make('Selfreliance\Operations\OperationsController');
         $this->loadViewsFrom(__DIR__.'/views', 'operations');
-        
+        $this->publishes([
+            __DIR__ . '/config/operations.php' => config_path('operations.php')
+        ], 'config');
     }
 
     /**

@@ -15,19 +15,17 @@ use App\Jobs\ProcessWithdraw;
 use Carbon\Carbon;
 class OperationsController extends Controller
 {
-	function __construct(){
+	function registerBlock(){
 		$pending = Withdraw::getOperationsPending();
 		$compleated = Withdraw::getOperationsCompleated();
-		\Blocks::register('Operations', function() use ($pending, $compleated){
-			if($pending == 0){
-				$percent = 0;
-			}else{
-				$percent = 100*$compleated/$pending;
-			}
-			return view('operations::withdraw')->with(
-				compact('pending', 'compleated', 'percent')
-			)->render();
-		});
+		if($pending == 0){
+			$percent = 0;
+		}else{
+			$percent = 100*$compleated/$pending;
+		}
+		return view('operations::withdraw')->with(
+			compact('pending', 'compleated', 'percent')
+		)->render();
 	}
 	public function index(CookieJar $cookieJar, Request $request)
 	{
