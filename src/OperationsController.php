@@ -13,6 +13,7 @@ use Withdraw;
 use App\Libraries\Deposit;
 use App\Jobs\ProcessWithdraw;
 use Carbon\Carbon;
+use DepositService;
 class OperationsController extends Controller
 {
 	function registerBlock(){
@@ -217,13 +218,14 @@ class OperationsController extends Controller
 						}
 					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status != 'completed') {
 						try{
-							(new Deposit)
-								->amount($history->amount)
-								->payment_id($history->id)
-								->payment_system($history->payment_system)
-								->transaction('by admin')
-								->create();
-						}catch(\App\Exceptions\NotFoudDepositPlan $e){
+							$resultP = DepositService::
+			                    amount($history->amount)
+			                    ->payment_id($history->id)
+			                    ->plan_seach_history(true)
+			                    ->transaction('by-admin_'.Carbon::now())
+			                    ->create();
+
+						}catch(\Exception $e){
 							\Session::flash('error',$e->getMessage());
 							return redirect()->back();					            
 				        }													
