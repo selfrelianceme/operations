@@ -29,30 +29,35 @@
 		                {{ csrf_field() }}
 		                <section>
 		                    <div class="row">
-		                        <div class="col-md-3">
+		                        <div class="col-md-4">
 		                            <div class="form-group">
 		                                <label for="application_id">ID заявки :</label>
 		                                <input type="text" class="form-control" value="{{$application_id}}" name="application_id" id="application_id"> </div>
 		                        </div>
-		                        <div class="col-md-3">
+		                        <div class="col-md-4">
 		                            <div class="form-group">
 		                                <label for="user_email">Пользователи (Email) :</label>
 		                                <input type="text" class="form-control" value="{{$user_email}}" name="user_email" id="user_email">
 		                            </div>
 		                        </div>
-		                        <div class="col-md-3">
+		                        <div class="col-md-4">
 		                            <div class="form-group">
 		                                <label for="transaction_id">Транзакция :</label>
 		                                <input type="text" class="form-control" value="{{$transaction_id}}" name="transaction_id" id="transaction_id"> </div>
 		                        </div>
-		                        <div class="col-md-3">
+		                        <div class="col-md-4">
 		                            <div class="form-group">
 		                                <label for="wallet">Кошелек :</label>
-		                                <input type="tel" class="form-control" value="{{$wallet}}" name="wallet" id="wallet"> </div>
+		                                <input type="text" class="form-control" value="{{$wallet}}" name="wallet" id="wallet"> </div>
+		                        </div>
+		                        <div class="col-md-4">
+		                            <div class="form-group">
+		                                <label for="address_pay">Адрес для оплаты :</label>
+		                                <input type="text" class="form-control" value="{{$address_pay}}" name="address_pay" id="address_pay"> </div>
 		                        </div>
 		                    </div>
 		                    <div class="row">
-		                        <div class="col-md-4">
+		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="payment_system">Платежная система :</label>
 		                                <select style="height: 200px;" multiple="{{count($payment_systems)}}" class="custom-select form-control" id="payment_system" name="payment_system[]">
@@ -63,7 +68,7 @@
 		                                </select>
 		                            </div>
 		                        </div>
-		                        <div class="col-md-4">
+		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="type">Операция :</label>
 		                                <select style="height: 200px;" multiple="{{count($operations)}}" class="custom-select form-control" id="type" name="type[]">
@@ -74,7 +79,7 @@
 		                                </select>
 		                            </div>
 		                        </div>
-		                        <div class="col-md-4">
+		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="status">Статус :</label>
 		                                <select style="height: 200px;" multiple="{{count($statuses)}}" class="custom-select form-control" id="status" name="status[]">
@@ -82,6 +87,17 @@
 		                                    @foreach($statuses as $value)
 		                                    	<option {{(in_array($value->status, $status))?'selected':NULL}} value="{{$value->status}}">{{$value->status}}</option>
 		                                    @endforeach
+		                                </select>
+		                            </div>
+		                        </div>
+		                        <div class="col-md-3">
+		                            <div class="form-group">
+		                                <label for="per_page">Результатов на страницу:</label>
+		                                <select class="custom-select form-control" id="per_page" name="per_page">
+	                                    	<option {{($per_page==10)?'selected':NULL}} value="10">10</option>
+	                                    	<option {{($per_page==20)?'selected':NULL}} value="20">20</option>
+	                                    	<option {{($per_page==50)?'selected':NULL}} value="50">50</option>
+	                                    	<option {{($per_page==100)?'selected':NULL}} value="100">100</option>
 		                                </select>
 		                            </div>
 		                        </div>
@@ -121,14 +137,14 @@
 	                                    		<button type="button" id="SelectAll" class="btn btn-sm btn-success">Select all</button>
 	                                    	@endif
 	                                    </th>
-	                                    <th 
-	                                    	class="do_sorting sorting{{($sort=='id')?'_'.$order:NULL}}" 
-	                                    	data-route="{{route('AdminOperations', ['sort' => 'id', 'order' => ($sort=='id' && $order=='asc')?'desc':'asc'])}}"
-	                                    >#</th>
+	                                    <th>
+	                                    	<a class="do_sorting sorting{{($sort=='id')?'_'.$order:NULL}}" 
+	                                    	data-route="{{route('AdminOperations', ['sort' => 'id', 'order' => ($sort=='id' && $order=='asc')?'desc':'asc'])}}" href="#">#</a>
+	                                    </th>
 	                                    <th>Операция</th>
 	                                    <th>Пользователь</th>
-	                                    <th class="do_sorting sorting{{($sort=='amount')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'amount', 'order' => ($sort=='amount' && $order=='asc')?'desc':'asc'])}}">Сумма</th>
-	                                    <th class="do_sorting sorting{{($sort=='created_at')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'created_at', 'order' => ($sort=='created_at' && $order=='asc')?'desc':'asc'])}}">Дата</th>
+	                                    <th><a class="do_sorting sorting{{($sort=='amount')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'amount', 'order' => ($sort=='amount' && $order=='asc')?'desc':'asc'])}}" href="#">Сумма</a></th>
+	                                    <th><a class="do_sorting sorting{{($sort=='created_at')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'created_at', 'order' => ($sort=='created_at' && $order=='asc')?'desc':'asc'])}}" href="#">Дата</a></th>
 	                                    <th>Статус</th>
 	                                </tr>
 	                            </thead>
@@ -181,9 +197,10 @@
                         </div>
 						<div class="form-actions">
 							<div class="row">
-								<div class="col-md-4"><button data-action="{{route('AdminOperationsConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
-								<div class="col-md-4"><button data-action="{{route('AdminOperationsStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
-								<div class="col-md-4"><button data-action="{{route('AdminOperationsCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
+								<div class="col-md-3"><button data-action="{{route('AdminOperationsConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
+								<div class="col-md-3"><button data-action="{{route('AdminOperationsMultiPay')}}" type="button" class="btn btn-block btn-warning MyAction">Сделать массовую выплату</button></div>
+								<div class="col-md-3"><button data-action="{{route('AdminOperationsStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
+								<div class="col-md-3"><button data-action="{{route('AdminOperationsCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
 							</div>
                         </div>  
                     </form>                      

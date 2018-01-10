@@ -37,6 +37,8 @@ class OperationsController extends Controller
 		$payment_system = ($request->input('payment_system'))?$request->input('payment_system'):[];
 		$type = ($request->input('type'))?$request->input('type'):[];
 		$status = ($request->input('status'))?$request->input('status'):[];
+		$per_page = ($request->input('per_page'))?$request->input('per_page'):10;
+		$address_pay = ($request->input('address_pay'))?$request->input('address_pay'):"";
 		// $cookieJar->queue(cookie('application_id', $application_id, 45000));
 
 		$sort = "id";
@@ -56,7 +58,7 @@ class OperationsController extends Controller
 		$history = Users_History::leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')
 			->leftJoin('users', 'users.id', '=', 'users__histories.user_id')
 			->orderBy("users__histories.".$sort, $order)
-			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status){
+			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status, $address_pay){
 				if($application_id != ''){
 					$tmp = explode(",", $application_id);
 					if(count($tmp) > 0){
@@ -77,6 +79,13 @@ class OperationsController extends Controller
 						$transaction_id = $tmp;
 					}
 					$query->whereIn('users__histories.transaction', $transaction_id);
+				}
+				if($address_pay != ''){
+					$tmp = explode(",", $address_pay);
+					if(count($tmp) > 0){
+						$address_pay_id = $tmp;
+					}
+					$query->whereIn('users__histories.data_info->address', $address_pay_id);
 				}
 				if($wallet != ''){
 					$query->where('users__histories.data_info->wallet', $wallet);
@@ -100,7 +109,7 @@ class OperationsController extends Controller
 					}
 				}
 			})
-			->paginate(10, array(
+			->paginate($per_page, array(
 	            'users__histories.*',
 	            'payment__systems.currency',
 	            'payment__systems.title',
@@ -113,6 +122,8 @@ class OperationsController extends Controller
         $history->appends(['wallet' => $wallet]);
         $history->appends(['type' => $type]);
         $history->appends(['status' => $status]);
+        $history->appends(['per_page' => $per_page]);
+        $history->appends(['address_pay' => $address_pay]);
 
         foreach($history as $row){
         	$row->data_info = json_decode($row->data_info);
@@ -136,6 +147,9 @@ class OperationsController extends Controller
 				case 'WITHDRAW':
 					$operations[$key] = "Вывод средств";
 					break;
+				case 'REFUND_DEPOSIT':
+					$operations[$key] = "Возврат депозита";
+					break;
 			}
 		}
 
@@ -157,6 +171,8 @@ class OperationsController extends Controller
 			"payment_system"  => $payment_system,
 			"type"            => $type,
 			"status"          => $status,
+			"per_page"        => $per_page,
+			"address_pay"     => $address_pay,
 			
 			"sort"            => $sort,
 			"order"           => $order,
@@ -214,7 +230,7 @@ class OperationsController extends Controller
 							$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
 							ProcessWithdraw::dispatch($history, $wallet);
 						}else{
-							Withdraw::history($history)->done_withdraw();	
+							Withdraw::history($history)->done_withdraw();
 						}
 					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status != 'completed') {
 						try{
@@ -235,6 +251,37 @@ class OperationsController extends Controller
 	    	\Session::flash('success','Операции были(а) отпралена в очередь или(и) выполнены');
 		}
 
+		return redirect()->back();    					
+	}
+
+	public function multi_pay(Request $request){
+		$data_for_multi_send = [];
+		if(count($request->input('application')) > 0){
+			foreach($request->input('application') as $row){
+				$history = Users_History::
+						where('id', $row)->
+						where('type', 'WITHDRAW')->
+						whereIn('status', ['pending', 'error'])->
+						whereIn('payment_system', [1,2])->
+						first();
+				if($history){
+					$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
+					if($wallet){
+						$data_for_multi_send[] = [
+							'id'   => $history->id,
+							'data' => [
+								$wallet, 
+								$history->amount
+							]
+						];
+					}
+				}
+	    	}
+		}
+		if(count($data_for_multi_send) > 0){
+			Withdraw::done_multi_send($data_for_multi_send);
+			\Session::flash('success','Операции были отправлены на выполнения (смотри статус в истории)');
+		}
 		return redirect()->back();    					
 	}
 }
