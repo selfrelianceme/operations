@@ -1,7 +1,7 @@
 {
   "name": "selfreliance/operations",
   "type": "library",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "operations applications",
   "keywords": ["laravel"],
   "homepage": "https://github.com/selfrelianceme/operations",

@@ -19,11 +19,16 @@ class OperationsController extends Controller
 	function registerBlock(){
 		$pending = Withdraw::getOperationsPending();
 		$compleated = Withdraw::getOperationsCompleated();
-		if($pending == 0){
-			$percent = 0;
+		if($compleated == 0){
+			$percent = 100;
 		}else{
-			$percent = 100*$compleated/$pending;
+			if($pending == 0){
+				$percent = 0;
+			}else{
+				$percent = 100*$pending/$compleated;
+			}
 		}
+		$percent = number($percent);
 		return view('operations::withdraw')->with(
 			compact('pending', 'compleated', 'percent')
 		)->render();
@@ -39,6 +44,8 @@ class OperationsController extends Controller
 		$status = ($request->input('status'))?$request->input('status'):[];
 		$per_page = ($request->input('per_page'))?$request->input('per_page'):10;
 		$address_pay = ($request->input('address_pay'))?$request->input('address_pay'):"";
+		$amount_where = ($request->input('amount_where'))?$request->input('amount_where'):"";
+		$amount = ($request->input('amount'))?$request->input('amount'):"";
 		// $cookieJar->queue(cookie('application_id', $application_id, 45000));
 
 		$sort = "id";
@@ -58,7 +65,7 @@ class OperationsController extends Controller
 		$history = Users_History::leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')
 			->leftJoin('users', 'users.id', '=', 'users__histories.user_id')
 			->orderBy("users__histories.".$sort, $order)
-			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status, $address_pay){
+			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status, $address_pay, $amount_where, $amount){
 				if($application_id != ''){
 					$tmp = explode(",", $application_id);
 					if(count($tmp) > 0){
@@ -108,6 +115,10 @@ class OperationsController extends Controller
 						$query->whereIn('users__histories.status', $status);
 					}
 				}
+
+				if($amount_where != '' && $amount){
+					$query->where('users__histories.amount', $amount_where, $amount);
+				}
 			})
 			->paginate($per_page, array(
 	            'users__histories.*',
@@ -124,9 +135,12 @@ class OperationsController extends Controller
         $history->appends(['status' => $status]);
         $history->appends(['per_page' => $per_page]);
         $history->appends(['address_pay' => $address_pay]);
+        $history->appends(['amount_where' => $amount_where]);
+        $history->appends(['amount' => $amount]);
 
         foreach($history as $row){
         	$row->data_info = json_decode($row->data_info);
+        	$row->amount = number($row->amount, 7);
         }
 
         $oClass = new \ReflectionClass ('App\Models\Users_History');
@@ -173,6 +187,8 @@ class OperationsController extends Controller
 			"status"          => $status,
 			"per_page"        => $per_page,
 			"address_pay"     => $address_pay,
+			"amount_where"    => $amount_where,
+			"amount"          => $amount,
 			
 			"sort"            => $sort,
 			"order"           => $order,

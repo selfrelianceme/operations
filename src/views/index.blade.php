@@ -55,6 +55,26 @@
 		                                <label for="address_pay">Адрес для оплаты :</label>
 		                                <input type="text" class="form-control" value="{{$address_pay}}" name="address_pay" id="address_pay"> </div>
 		                        </div>
+		                        <div class="col-md-4">
+		                            <div class="row">
+		                            	<div class="col-md-4">
+		                            		<div class="form-group">
+				                                <label for="amount_where">где</label>
+				                                <select class="custom-select form-control" id="amount_where" name="amount_where">
+			                                    	<option value=""></option>
+			                                    	<option {{($amount_where=='=')?'selected':NULL}} value="=">=</option>
+			                                    	<option {{($amount_where=='>')?'selected':NULL}} value=">">></option>
+			                                    	<option {{($amount_where=='<')?'selected':NULL}} value="<"><</option>
+				                                </select>
+				                            </div>
+		                            	</div>
+		                            	<div class="col-md-8">
+		                            		<div class="form-group">
+			                                <label for="amount">Сумма :</label>
+			                                <input type="text" class="form-control" value="{{$amount}}" name="amount" id="amount"> </div>
+		                            	</div>
+		                            </div>
+		                        </div>
 		                    </div>
 		                    <div class="row">
 		                        <div class="col-md-3">
