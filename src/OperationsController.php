@@ -14,6 +14,9 @@ use App\Libraries\Deposit;
 use App\Jobs\ProcessWithdraw;
 use Carbon\Carbon;
 use DepositService;
+use PaymentSystem;
+use Balance;
+use DB;
 class OperationsController extends Controller
 {
 	function registerBlock(){
@@ -42,7 +45,7 @@ class OperationsController extends Controller
 		$payment_system = ($request->input('payment_system'))?$request->input('payment_system'):[];
 		$type = ($request->input('type'))?$request->input('type'):[];
 		$status = ($request->input('status'))?$request->input('status'):[];
-		$per_page = ($request->input('per_page'))?$request->input('per_page'):10;
+		$per_page = ($request->input('per_page'))?$request->input('per_page'):20;
 		$address_pay = ($request->input('address_pay'))?$request->input('address_pay'):"";
 		$amount_where = ($request->input('amount_where'))?$request->input('amount_where'):"";
 		$amount = ($request->input('amount'))?$request->input('amount'):"";
@@ -143,29 +146,7 @@ class OperationsController extends Controller
         	$row->amount = number($row->amount, 7);
         }
 
-        $oClass = new \ReflectionClass ('App\Models\Users_History');
-		$operations = $oClass->getConstants ();
-		unset($operations['CREATED_AT'], $operations['UPDATED_AT']);
-
-		foreach($operations as $key=>$value){
-			switch ($key) {
-				case 'CREATE_DEPOSIT':
-					$operations[$key] = "Создание депозита";
-					break;
-				case 'ACCRUALS':
-					$operations[$key] = "Начисление";
-					break;
-				case 'REFFERAL':
-					$operations[$key] = "Реферальные";
-					break;
-				case 'WITHDRAW':
-					$operations[$key] = "Вывод средств";
-					break;
-				case 'REFUND_DEPOSIT':
-					$operations[$key] = "Возврат депозита";
-					break;
-			}
-		}
+		$operations = Balance::get_operations();
 
 		$statuses = Users_History::selectRaw('DISTINCT status')->get();
 
@@ -300,4 +281,98 @@ class OperationsController extends Controller
 		}
 		return redirect()->back();    					
 	}
+
+
+	public function create(){
+		$payment_systems = PaymentSystem::list(1,1);
+		$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT']);
+        $plans = DepositService::getPlansModel();
+        return view('operations::create', compact('payment_systems', 'operations', 'plans'));
+    }
+
+    public function store(Request $request){
+    	$answer = [
+			'msg'     => 'Server error'
+    	];
+    	$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT']);
+    	$operations = implode(",", array_keys($operations));
+        $rules = [
+			'user_email' => 'required|exists:users,email',
+			'amount'     => 'required',
+			'operation'  => 'required|in:'.$operations
+        ];
+
+        switch ($request['operation']) {
+            case 'CREATE_DEPOSIT':
+            	$rules['plan_id'] = 'required|exists:deposits__plans,id';
+            	$rules['payment_system'] = 'required|exists:payment__systems,id';
+            	break;
+            case 'WITHDRAW':
+        	case 'ADD_FUNDS':
+        	case 'SELL_FUNDS':
+            	$rules['payment_system'] = 'required|exists:payment__systems,id';
+            	break;
+            case 'ACCRUALS':
+            	$rules['deposit_id'] = 'required|exists:deposits,id';
+            	break;
+        }
+        $this->validate($request, $rules);
+        DB::beginTransaction();
+    	try{
+			$user = User::where('email', $request['user_email'])->value('id');
+			switch ($request['operation']) {
+				case 'CREATE_DEPOSIT':
+						$result = DepositService::
+			                user($user)
+			                ->amount($request->input('amount'))
+			                ->payment_system($request->input('payment_system'))
+			                ->plan($request->input('plan_id'))
+			                ->make_purchase();
+		               	if($result->created_purchase){
+		               		$answer['msg'] = 'Операция по создания депозита успешно созадана, перейти в <a href="'.route('AdminOperations', ['application_id' => $result->history->id]).'">операции</a> ?';
+		               	}
+					break;
+				
+				case 'ACCRUALS':
+					$deposit_id = $request['deposit_id'];
+					$payment_system = DepositService::get_info_about_id($deposit_id);
+					
+					$History = Balance::add_and_history('ACCRUALS', $deposit_id, $user, $payment_system->payment_system, $request->input('amount'), ["deposit_id"   => (int)$deposit_id]);
+
+					$answer['msg'] = 'Операция начисления создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
+					break;
+				
+				case 'WITHDRAW':
+					$result = Withdraw::user_id($user)
+	                    ->payment_system($request->input('payment_system'))
+	                    ->amount_withdraw($request->input('amount'))
+	                    ->create();
+	                $answer['msg'] = 'Операция вывода создана перейти в <a href="'.route('AdminOperations', ['application_id' => $result->history_publish->id]).'">операцию</a> ?';
+					break;
+				
+				case 'ADD_FUNDS':
+					$History = Balance::add_and_history('ADD_FUNDS', 0, $user, $request->input('payment_system'), $request->input('amount'), []);
+
+					$answer['msg'] = 'Операция пополнения баланса создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
+					break;
+				
+				case 'SELL_FUNDS':
+					if($request->input('amount') > Balance::getBalancePaymentSystem($user, $request->input('payment_system'), true)){
+						throw new \Exception("На балансе недостаточно средств для списание данной суммы");
+					}
+
+					$History = Balance::sell_and_history('SELL_FUNDS', 0, $user, $request->input('payment_system'), $request->input('amount'), []);
+
+					$answer['msg'] = 'Операция снятия средств с баланса создана и выполнена, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
+					break;
+			}
+			DB::commit();
+			\Session::flash('success', $answer['msg']);
+            return redirect()->back();
+    	}catch(\Exception $e){
+			DB::rollBack();
+			\Session::flash('error', $e->getMessage());
+			return redirect()->back()->withInput();
+		}
+    }
 }

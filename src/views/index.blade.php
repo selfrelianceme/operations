@@ -3,7 +3,7 @@
 @section('pageTitle', 'Операции')
 @section('content')
 	@push('display')
-    	<a href="http://localhost:3001/admin/deposits/create" class="btn hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
+    	<a href="{{route('AdminOperationsCreate')}}" class="btn hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
     @endpush
 
 	<div class="modal fade bs-example-modal-lg" id="informationTransaction" aria-hidden="true">
