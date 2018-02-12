@@ -123,6 +123,7 @@ class OperationsController extends Controller
 					$query->where('users__histories.amount', $amount_where, $amount);
 				}
 			})
+			->with('from_user')
 			->paginate($per_page, array(
 	            'users__histories.*',
 	            'payment__systems.currency',

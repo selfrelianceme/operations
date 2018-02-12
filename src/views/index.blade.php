@@ -80,7 +80,7 @@
 		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="payment_system">Платежная система :</label>
-		                                <select style="height: 200px;" multiple="{{count($payment_systems)}}" class="custom-select form-control" id="payment_system" name="payment_system[]">
+		                                <select style="height: 150px;" multiple="{{count($payment_systems)}}" class="custom-select form-control" id="payment_system" name="payment_system[]">
 		                                    <option value="">Выбрать платежную систему</option>
 		                                    @foreach($payment_systems as $row)
 		                                    	<option {{(in_array($row->id, $payment_system))?'selected':NULL}} value="{{$row->id}}">{{$row->title}}, {{$row->currency}}</option>
@@ -91,7 +91,7 @@
 		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="type">Операция :</label>
-		                                <select style="height: 200px;" multiple="{{count($operations)}}" class="custom-select form-control" id="type" name="type[]">
+		                                <select style="height: 150px;" multiple="{{count($operations)}}" class="custom-select form-control" id="type" name="type[]">
 		                                    <option value="">Выбрать операцию</option>
 		                                    @foreach($operations as $key=>$value)
 		                                    	<option {{(in_array($key, $type))?'selected':NULL}} value="{{$key}}">{{$value}}</option>
@@ -102,7 +102,7 @@
 		                        <div class="col-md-3">
 		                            <div class="form-group">
 		                                <label for="status">Статус :</label>
-		                                <select style="height: 200px;" multiple="{{count($statuses)}}" class="custom-select form-control" id="status" name="status[]">
+		                                <select style="height: 150px;" multiple="{{count($statuses)}}" class="custom-select form-control" id="status" name="status[]">
 		                                    <option value="">Выбрать статус</option>
 		                                    @foreach($statuses as $value)
 		                                    	<option {{(in_array($value->status, $status))?'selected':NULL}} value="{{$value->status}}">{{$value->status}}</option>
@@ -195,7 +195,10 @@
 			                                    <td>
 			                                    	<a target="_blank" href="{{route('AdminUsersEdit', $row->user_id)}}">{{$row->email}}</a><br/>
 			                                    	@if(isset($row->data_info->wallet))
-			                                    		{{$row->data_info->wallet}}
+			                                    		<div style="width: 200px; overflow: auto;">{{$row->data_info->wallet}}</div>
+			                                    	@endif
+			                                    	@if($row->from_user)
+			                                    		от <a href="{{route('AdminUsersEdit', $row->from_user->id)}}">{{$row->from_user->email}}</a>
 			                                    	@endif
 			                                    </td>
 			                                    <td>{{$row->title}}<br/>{{$row->amount}} {{$row->currency}}</td>
