@@ -124,10 +124,10 @@
 		                    </div>
 		                    <div class="row">
 		                    	<div class="col-md-3"></div>
-		                    	<div class="col-md-3">
+		                    	<div class="col-md-3" style="    margin: 5px 0px;">
 		                    		<button type="submit" class="btn btn-block btn-success">Отобразить</button>
 		                    	</div>
-		                    	<div class="col-md-3">
+		                    	<div class="col-md-3" style="    margin: 5px 0px;">
 		                    		<button type="button" class="btn btn-block btn-info ResetForm">Сбросить</button>
 		                    	</div>
 		                    </div>
@@ -220,10 +220,10 @@
                         </div>
 						<div class="form-actions">
 							<div class="row">
-								<div class="col-md-3"><button data-action="{{route('AdminOperationsConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
-								<div class="col-md-3"><button data-action="{{route('AdminOperationsMultiPay')}}" type="button" class="btn btn-block btn-warning MyAction">Сделать массовую выплату</button></div>
-								<div class="col-md-3"><button data-action="{{route('AdminOperationsStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
-								<div class="col-md-3"><button data-action="{{route('AdminOperationsCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
+								<div class="col-md-3" style="    margin: 10px 0px;"><button data-action="{{route('AdminOperationsConfirm')}}" type="button" class="btn btn-block btn-success MyAction">Выполнить</button></div>
+								<div class="col-md-3" style="    margin: 10px 0px;"><button data-action="{{route('AdminOperationsMultiPay')}}" type="button" class="btn btn-block btn-warning MyAction">Сделать массовую выплату</button></div>
+								<div class="col-md-3" style="    margin: 10px 0px;"><button data-action="{{route('AdminOperationsStatusDone')}}" type="button" class="btn btn-block btn-info MyAction">Изменить статус на готово</button></div>
+								<div class="col-md-3" style="    margin: 10px 0px;"><button data-action="{{route('AdminOperationsCancel')}}" type="button" class="btn btn-block btn-danger MyAction">Отменить операцию</button></div>
 							</div>
                         </div>  
                     </form>                      
