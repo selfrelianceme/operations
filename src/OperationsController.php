@@ -285,10 +285,10 @@ class OperationsController extends Controller
 
 
 	public function create(){
-		$payment_systems = PaymentSystem::list(1,1);
+		$payment_systems = PaymentSystem::getAll('asc');
 		$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT']);
-        $plans = DepositService::getPlansModel();
-        return view('operations::create', compact('payment_systems', 'operations', 'plans'));
+        // $plans = DepositService::getPlansModel();
+        return view('operations::create', compact('payment_systems', 'operations'));
     }
 
     public function store(Request $request){

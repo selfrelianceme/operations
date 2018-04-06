@@ -58,22 +58,7 @@
                                 @endif							        
 						    </div>
 						</div>	
-
-						<div class="form-group row {{ $errors->has('plan_id') ? ' error' : '' }}">
-						    <label for="example-month-input" class="col-2 col-form-label">План (необязательно)</label>
-						    <div class="col-10">
-						        <select class="custom-select col-12" id="inlineFormCustomSelect" name="plan_id">
-						            <option value="0">Выбрать...</option>
-						            @foreach($plans as $row)
-						            	<option {{($row->id==old('plan_id'))?'selected':NULL}} value="{{$row->id}}">{{$row->title}} - {{$row->percent}}% в день на {{$row->accruals}} дней</option>
-						            @endforeach
-						        </select>
-						        @if ($errors->has('plan_id'))
-                                    <div class="help-block"><ul role="alert"><li>{{ $errors->first('plan_id') }}</li></ul></div>
-                                @endif						        
-						    </div>
-						</div>	
-
+						
 						<div class="form-group m-t-40 row {{ $errors->has('deposit_id') ? ' error' : '' }}">
 	                        <label for="example-text-input" class="col-2 col-form-label">ID депозита</label>
 	                        <div class="col-10">
