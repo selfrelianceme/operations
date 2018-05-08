@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Http\Request;
 use App\Models\Users_History;
-use App\Models\Payment_System;
 use Cookie;
 use Illuminate\Cookie\CookieJar;
 use Withdraw;
@@ -143,16 +142,21 @@ class OperationsController extends Controller
         $history->appends(['amount' => $amount]);
 
         foreach($history as $row){
-        	$row->data_info = json_decode($row->data_info);
+        	if(is_string($row->data_info)){
+        		$row->data_info = json_decode($row->data_info);
+        	}
         	$row->amount = number($row->amount, 7);
         }
 
 		$operations = Balance::get_operations();
 
-		$statuses = Users_History::selectRaw('DISTINCT status')->get();
+		// $statuses = Users_History::selectRaw('DISTINCT status')->get();
+		$statuses = [
+			'pending', 'completed', 'error', 'cancel', 'in_queue', 'underpayment'
+		];
 
 
-		$payment_systems = Payment_System::orderBy('sort', 'asc')->get();
+		$payment_systems = PaymentSystem::getAll('asc');
 
 		return view('operations::index')->with([
 			"history"         => $history,
@@ -320,11 +324,11 @@ class OperationsController extends Controller
         $this->validate($request, $rules);
         DB::beginTransaction();
     	try{
-			$user = User::where('email', $request['user_email'])->value('id');
+			$user = User::where('email', $request['user_email'])->first();
 			switch ($request['operation']) {
 				case 'CREATE_DEPOSIT':
 						$result = DepositService::
-			                user($user)
+			                user($user->id)
 			                ->amount($request->input('amount'))
 			                ->payment_system($request->input('payment_system'))
 			                ->plan($request->input('plan_id'))
@@ -338,33 +342,47 @@ class OperationsController extends Controller
 					$deposit_id = $request['deposit_id'];
 					$payment_system = DepositService::get_info_about_id($deposit_id);
 					
-					$History = Balance::add_and_history('ACCRUALS', $deposit_id, $user, $payment_system->payment_system, $request->input('amount'), ["deposit_id"   => (int)$deposit_id]);
+					$History = Balance::add_and_history('ACCRUALS', $deposit_id, $user->id, $payment_system->payment_system, $request->input('amount'), ["deposit_id"   => (int)$deposit_id]);
 
 					$answer['msg'] = 'Операция начисления создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
 					break;
 				
 				case 'WITHDRAW':
-					$result = Withdraw::user_id($user)
-	                    ->payment_system($request->input('payment_system'))
-	                    ->amount_withdraw($request->input('amount'))
-	                    ->create();
-	                $answer['msg'] = 'Операция вывода создана перейти в <a href="'.route('AdminOperations', ['application_id' => $result->history_publish->id]).'">операцию</a> ?';
+					list($buy, $history) = Withdraw::create_withdraw($user, $request->input('payment_system'), $request->input('amount'));
+	                $answer['msg'] = 'Операция вывода создана перейти в <a href="'.route('AdminOperations', ['application_id' => $history->id]).'">операцию</a> ?';
 					break;
 				
 				case 'ADD_FUNDS':
-					$History = Balance::add_and_history('ADD_FUNDS', 0, $user, $request->input('payment_system'), $request->input('amount'), []);
-
-					$answer['msg'] = 'Операция пополнения баланса создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
+					list($buy, $history) = Balance::actionBalance([
+			            'type'           => 'ADD_FUNDS',
+			            'user_id'        => $user->id,
+			            'payment_system' => $request->input('payment_system'),
+			            'amount'         => $request->input('amount'),
+			            'status'         => 'completed',
+			            'transaction'    => '',
+			            'is_balance'     => 1,
+			        ], 'buy');
+					$answer['msg'] = 'Операция пополнения баланса создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $history->id]).'">операцию</a> ?';
 					break;
 				
 				case 'SELL_FUNDS':
-					if($request->input('amount') > Balance::getBalancePaymentSystem($user, $request->input('payment_system'), true)){
+					list($balance, $total) = Balance::getByPaymentSystem($user->id);
+					$find_balance = $balance->where('id', $request->input('payment_system'))->first();
+					
+					if($request->input('amount') > $find_balance->balance){
 						throw new \Exception("На балансе недостаточно средств для списание данной суммы");
 					}
+					list($buy, $history) = Balance::actionBalance([
+			            'type'           => 'SELL_FUNDS',
+			            'user_id'        => $user->id,
+			            'payment_system' => $request->input('payment_system'),
+			            'amount'         => $request->input('amount'),
+			            'status'         => 'completed',
+			            'transaction'    => '',
+			            'is_balance'     => 1,
+			        ], 'sell');
 
-					$History = Balance::sell_and_history('SELL_FUNDS', 0, $user, $request->input('payment_system'), $request->input('amount'), []);
-
-					$answer['msg'] = 'Операция снятия средств с баланса создана и выполнена, перейти в <a href="'.route('AdminOperations', ['application_id' => $History->id]).'">операцию</a> ?';
+					$answer['msg'] = 'Операция снятия средств с баланса создана и выполнена, перейти в <a href="'.route('AdminOperations', ['application_id' => $history->id]).'">операцию</a> ?';
 					break;
 			}
 			DB::commit();

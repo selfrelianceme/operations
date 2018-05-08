@@ -105,7 +105,7 @@
 		                                <select style="height: 150px;" multiple="{{count($statuses)}}" class="custom-select form-control" id="status" name="status[]">
 		                                    <option value="">Выбрать статус</option>
 		                                    @foreach($statuses as $value)
-		                                    	<option {{(in_array($value->status, $status))?'selected':NULL}} value="{{$value->status}}">{{$value->status}}</option>
+		                                    	<option {{(in_array($value, $status))?'selected':NULL}} value="{{$value}}">{{$value}}</option>
 		                                    @endforeach
 		                                </select>
 		                            </div>
@@ -183,7 +183,7 @@
 														@foreach($row->data_info as $key=>$val)
 															@if(isset($key) && isset($val))
 																@if($key == 'full_data_ipn')
-																	data-{{$key}}='{{print_r(json_decode($val, true), true)}}'
+																	data-{{$key}}='{{print_r($val, true)}}'
 																@else
 																	data-{{$key}}='@if(!is_object($val)) {!!$val!!} @endif'
 																@endif
