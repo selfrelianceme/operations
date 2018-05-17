@@ -228,25 +228,25 @@ class OperationsController extends Controller
 					if ($history->type == 'WITHDRAW' && in_array($history->status, ['pending', 'error', 'in_queue'])) {
 						$history->status = 'in_queue';
 						$history->save();
+						$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
 						if(env('USE_QUEUE_WITHDRAW')){
-							$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
 							ProcessWithdraw::dispatch($history, $wallet);
 						}else{
-							Withdraw::history($history)->done_withdraw();
+							Withdraw::done_withdraw($history->id, $wallet);
 						}
 					}elseif ($history->type == 'CREATE_DEPOSIT' && $history->status != 'completed') {
-						try{
-							$resultP = DepositService::
-			                    amount($history->amount)
-			                    ->payment_id($history->id)
-			                    ->plan_seach_history(true)
-			                    ->transaction('by-admin_'.Carbon::now())
-			                    ->create();
+						// try{
+						// 	$resultP = DepositService::
+			   //                  amount($history->amount)
+			   //                  ->payment_id($history->id)
+			   //                  ->plan_seach_history(true)
+			   //                  ->transaction('by-admin_'.Carbon::now())
+			   //                  ->create();
 
-						}catch(\Exception $e){
-							\Session::flash('error',$e->getMessage());
-							return redirect()->back();					            
-				        }													
+						// }catch(\Exception $e){
+						// 	\Session::flash('error',$e->getMessage());
+						// 	return redirect()->back();					            
+				  //       }													
 					}
 				}
 	    	}
