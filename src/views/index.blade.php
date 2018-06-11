@@ -182,7 +182,7 @@
 													@if($row->data_info)
 														@foreach($row->data_info as $key=>$val)
 															@if(isset($key) && isset($val))
-																@if($key == 'full_data_ipn')
+																@if($key == 'full_data_ipn' || $key == 'full_data')
 																	data-{{$key}}='{{print_r($val, true)}}'
 																@else
 																	data-{{$key}}='@if(!is_object($val)) {!!$val!!} @endif'
