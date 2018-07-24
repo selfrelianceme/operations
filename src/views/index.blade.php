@@ -182,7 +182,7 @@
 													@if($row->data_info)
 														@foreach($row->data_info as $key=>$val)
 															@if(isset($key) && isset($val))
-																@if($key == 'full_data_ipn')
+																@if($key == 'full_data_ipn' || $key == 'tx')
 																	data-{{$key}}='{{print_r($val, true)}}'
 																@else
 																	data-{{$key}}='@if(!is_object($val)) {!!$val!!} @endif'
@@ -312,7 +312,7 @@
 							break;
 						}
 						if(i != 'toggle' && el != ''){
-							if(i == 'full_data_ipn'){
+							if(i == 'full_data_ipn' || i == 'tx'){
 								$('.modal-body').append('<div class="form-group"><label>'+title+'</label><textarea style="height: 250px;" class="form-control">'+data[i]+'</textarea></div>');
 							}else{
 								$('.modal-body').append('<p>'+title+': '+data[i]+'</p>');	
