@@ -1,5 +1,5 @@
 {
-  "package": "sharesrateadmin",
-  "name": "Курс акций",
+  "package": "operations",
+  "name": "Операции",
   "icon": "mdi mdi-chart-line"
 }
