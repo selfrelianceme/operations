@@ -20,9 +20,9 @@
 	                <form class="form" method="POST" action="{{route('AdminOperationsStore')}}">
 	                    
 	                    <div class="form-group m-t-40 row {{ $errors->has('user_email') ? ' error' : '' }}">
-	                        <label for="example-text-input" class="col-2 col-form-label">Пользователь (E-mail)</label>
+	                        <label for="email" class="col-2 col-form-label">Пользователь (E-mail)</label>
 	                        <div class="col-10">
-	                            <input class="form-control" type="text" name="user_email" value="{{old('user_email')}}" id="example-text-input">
+	                            <input class="form-control" type="text" name="user_email" value="{{old('user_email')}}" id="email">
 								@if ($errors->has('user_email'))
                                     <div class="help-block"><ul role="alert"><li>{{ $errors->first('user_email') }}</li></ul></div>
                                 @endif
@@ -30,9 +30,9 @@
 	                    </div>
 
 						<div class="form-group row {{ $errors->has('operation') ? ' error' : '' }}">
-						    <label for="example-month-input" class="col-2 col-form-label">Операция</label>
+						    <label for="operation" class="col-2 col-form-label">Операция</label>
 						    <div class="col-10">
-						        <select class="custom-select col-12" id="inlineFormCustomSelect" name="operation">
+						        <select class="custom-select col-12" id="inlineFormCustomSelect" name="operation" id="operation">
 						            <option selected="" value="0">Выбрать...</option>
 						            @foreach($operations as $key => $value)
 										<option {{($key==old('operation'))?'selected':NULL}}  value="{{$key}}">{{$value}}</option>
@@ -45,9 +45,9 @@
 						</div>
 
 						<div class="form-group row {{ $errors->has('payment_system') ? ' error' : '' }}">
-						    <label for="example-month-input" class="col-2 col-form-label">Платежная система</label>
+						    <label for="payment_system" class="col-2 col-form-label">Платежная система</label>
 						    <div class="col-10">
-						        <select class="custom-select col-12" id="inlineFormCustomSelect" name="payment_system">
+						        <select class="custom-select col-12" id="inlineFormCustomSelect" name="payment_system" id="payment_system">
 						            <option selected="" value="0">Выбрать...</option>
 						            @foreach($payment_systems as $row)
 										<option {{($row->id==old('payment_system'))?'selected':NULL}}  value="{{$row->id}}">{{$row->title}} ({{$row->currency}})</option>
@@ -58,7 +58,7 @@
                                 @endif							        
 						    </div>
 						</div>	
-						
+						{{--
 						<div class="form-group m-t-40 row {{ $errors->has('deposit_id') ? ' error' : '' }}">
 	                        <label for="example-text-input" class="col-2 col-form-label">ID депозита</label>
 	                        <div class="col-10">
@@ -68,13 +68,24 @@
                                 @endif		                            
 	                        </div>
 	                    </div>
+	                    --}}
 
 	                    <div class="form-group m-t-40 row {{ $errors->has('amount') ? ' error' : '' }}">
-	                        <label for="example-text-input" class="col-2 col-form-label">Сумма</label>
+	                        <label for="amount" class="col-2 col-form-label">Сумма</label>
 	                        <div class="col-10">
-	                            <input class="form-control" type="number" step="any" name="amount" value="{{ old('amount') }}" id="example-text-input">
+	                            <input class="form-control" type="number" step="any" name="amount" value="{{ old('amount') }}" id="amount">
 	                            @if ($errors->has('amount'))
                                     <div class="help-block"><ul role="alert"><li>{{ $errors->first('amount') }}</li></ul></div>
+                                @endif		                            
+	                        </div>
+	                    </div>
+
+	                    <div class="form-group m-t-40 row {{ $errors->has('transaction') ? ' error' : '' }}">
+	                        <label for="transaction" class="col-2 col-form-label">Транзакция</label>
+	                        <div class="col-10">
+	                            <input class="form-control" type="text" step="any" name="transaction" value="{{ old('transaction', 'by-admin_'.\Carbon\Carbon::now()) }}" id="transaction">
+	                            @if ($errors->has('transaction'))
+                                    <div class="help-block"><ul role="alert"><li>{{ $errors->first('transaction') }}</li></ul></div>
                                 @endif		                            
 	                        </div>
 	                    </div>

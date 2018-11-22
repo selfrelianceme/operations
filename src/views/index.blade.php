@@ -193,7 +193,7 @@
 			                                    	data-toggle="modal" href="">Данные операции</a>
 			                                    </td>
 			                                    <td>
-			                                    	<a target="_blank" href="{{route('AdminUsersEdit', $row->user_id)}}">{{$row->email}}</a><br/>
+			                                    	<a target="_blank" href="{{route('AdminUsersEdit', $row->user_id)}}">{{$row->user->email}}</a><br/>
 			                                    	@if(isset($row->data_info->wallet))
 			                                    		<div style="width: 200px; overflow: auto;">{{$row->data_info->wallet}}</div>
 			                                    	@endif
@@ -201,7 +201,7 @@
 			                                    		от <a href="{{route('AdminUsersEdit', $row->from_user->id)}}">{{$row->from_user->email}}</a>
 			                                    	@endif
 			                                    </td>
-			                                    <td>{{$row->title}}<br/>{{$row->amount}} {{$row->currency}}</td>
+			                                    <td>{{$row->payment_system_select['title']}}<br/>{{$row->amount}} {{$row->payment_system_select['currency']}}</td>
 			                                    <td>{{$row->created_at}}<br/>{{$row->updated_at}}</td> 
 			                                    <td>{{$row->status}}</td> 
 			                                </tr>

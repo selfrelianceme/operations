@@ -63,11 +63,12 @@ class OperationsController extends Controller
 				$order = Cookie::get('order');
 			}
 		}
-		// dd(count($type));
-		$history = Users_History::leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')
-			->leftJoin('users', 'users.id', '=', 'users__histories.user_id')
-			->orderBy("users__histories.".$sort, $order)
-			->where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status, $address_pay, $amount_where, $amount){
+		$payment_systems = PaymentSystem::getAll('asc');
+		$history = Users_History::
+			// leftJoin('payment__systems', 'payment__systems.id', '=', 'users__histories.payment_system')->
+			// leftJoin('users', 'users.id', '=', 'users__histories.user_id')->
+			orderBy("users__histories.".$sort, $order)->
+			where(function($query) use ($application_id, $user_email, $transaction_id, $wallet, $payment_system, $type, $status, $address_pay, $amount_where, $amount){
 				if($application_id != ''){
 					$tmp = explode(",", $application_id);
 					if(count($tmp) > 0){
@@ -122,13 +123,14 @@ class OperationsController extends Controller
 					$query->where('users__histories.amount', $amount_where, $amount);
 				}
 			})
-			->with('from_user')
-			->paginate($per_page, array(
-	            'users__histories.*',
-	            'payment__systems.currency',
-	            'payment__systems.title',
-	            'users.email',
-	        ));
+			->with(['from_user', 'user'])
+			->paginate($per_page);
+	    $history->each(function($row) use ($payment_systems){
+			$find = $payment_systems->where('id', $row->payment_system)->first();
+			if($find){
+				$row->payment_system_select = $find;
+			}
+	    });
         $history->appends(['application_id' => $application_id]);
         $history->appends(['user_email' => $user_email]);
         $history->appends(['payment_system' => $payment_system]);
@@ -154,9 +156,6 @@ class OperationsController extends Controller
 		$statuses = [
 			'pending', 'completed', 'error', 'cancel', 'in_queue', 'underpayment'
 		];
-
-
-		$payment_systems = PaymentSystem::getAll('asc');
 
 		return view('operations::index')->with([
 			"history"         => $history,
@@ -289,8 +288,8 @@ class OperationsController extends Controller
 
 
 	public function create(){
-		$payment_systems = PaymentSystem::getAll('asc');
-		$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT']);
+		$payment_systems = PaymentSystem::getAll('asc')->where('is_real_payment_system', 1)->values()->all();
+		$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT', 'BUY_COIN', 'SELL_COIN', 'SELL_FUNDS', 'TRANSFER_BALANCE_BUY', 'TRANSFER_BALANCE']);
         // $plans = DepositService::getPlansModel();
         return view('operations::create', compact('payment_systems', 'operations'));
     }
@@ -299,7 +298,7 @@ class OperationsController extends Controller
     	$answer = [
 			'msg'     => 'Server error'
     	];
-    	$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT']);
+    	$operations = Balance::get_operations(['REFFERAL', 'REFUND_DEPOSIT', 'BUY_COIN', 'SELL_COIN', 'SELL_FUNDS', 'TRANSFER_BALANCE_BUY', 'TRANSFER_BALANCE']);
     	$operations = implode(",", array_keys($operations));
         $rules = [
 			'user_email' => 'required|exists:users,email',
@@ -313,9 +312,12 @@ class OperationsController extends Controller
             	$rules['payment_system'] = 'required|exists:payment__systems,id';
             	break;
             case 'WITHDRAW':
-        	case 'ADD_FUNDS':
         	case 'SELL_FUNDS':
             	$rules['payment_system'] = 'required|exists:payment__systems,id';
+            	break;
+            case 'ADD_FUNDS':
+				$rules['payment_system'] = 'required|exists:payment__systems,id';
+				$rules['transaction']    = 'required|unique:users__histories,transaction';
             	break;
             case 'ACCRUALS':
             	$rules['deposit_id'] = 'required|exists:deposits,id';
@@ -326,17 +328,17 @@ class OperationsController extends Controller
     	try{
 			$user = User::where('email', $request['user_email'])->first();
 			switch ($request['operation']) {
-				case 'CREATE_DEPOSIT':
-						$result = DepositService::
-			                user($user->id)
-			                ->amount($request->input('amount'))
-			                ->payment_system($request->input('payment_system'))
-			                ->plan($request->input('plan_id'))
-			                ->make_purchase();
-		               	if($result->created_purchase){
-		               		$answer['msg'] = 'Операция по создания депозита успешно созадана, перейти в <a href="'.route('AdminOperations', ['application_id' => $result->history->id]).'">операции</a> ?';
-		               	}
-					break;
+				// case 'CREATE_DEPOSIT':
+				// 		$result = DepositService::
+			 //                user($user->id)
+			 //                ->amount($request->input('amount'))
+			 //                ->payment_system($request->input('payment_system'))
+			 //                ->plan($request->input('plan_id'))
+			 //                ->make_purchase();
+		  //              	if($result->created_purchase){
+		  //              		$answer['msg'] = 'Операция по создания депозита успешно созадана, перейти в <a href="'.route('AdminOperations', ['application_id' => $result->history->id]).'">операции</a> ?';
+		  //              	}
+				// 	break;
 				
 				case 'ACCRUALS':
 					$deposit_id = $request['deposit_id'];
@@ -359,7 +361,7 @@ class OperationsController extends Controller
 			            'payment_system' => $request->input('payment_system'),
 			            'amount'         => $request->input('amount'),
 			            'status'         => 'completed',
-			            'transaction'    => '',
+			            'transaction'    => $request->input('transaction'),
 			            'is_balance'     => 1,
 			        ], 'buy');
 					$answer['msg'] = 'Операция пополнения баланса создана и зачислена на баланс, перейти в <a href="'.route('AdminOperations', ['application_id' => $history->id]).'">операцию</a> ?';
@@ -378,7 +380,7 @@ class OperationsController extends Controller
 			            'payment_system' => $request->input('payment_system'),
 			            'amount'         => $request->input('amount'),
 			            'status'         => 'completed',
-			            'transaction'    => '',
+			            'transaction'    => $request->input('transaction'),
 			            'is_balance'     => 1,
 			        ], 'sell');
 
