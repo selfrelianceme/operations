@@ -180,15 +180,7 @@
 			                                    	{{$operations[$row->type]}}
 			                                    	<br/><a href="#informationTransaction" class="show_info_transaction" data-transaction="{{$row->transaction}}" 
 													@if($row->data_info)
-														@foreach($row->data_info as $key=>$val)
-															@if(isset($key) && isset($val))
-																@if($key == 'full_data_ipn' || $key == 'full_data' || $key == 'tx')
-																	data-{{$key}}='{{print_r($val, true)}}'
-																@else
-																	data-{{$key}}='@if(!is_object($val)) {!!$val!!} @endif'
-																@endif
-															@endif
-														@endforeach
+														data-data_info='{{print_r($row->data_info, true)}}'
 													@endif
 			                                    	data-toggle="modal" href="">Данные операции</a>
 			                                    </td>
