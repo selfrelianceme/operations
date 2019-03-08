@@ -81,7 +81,8 @@ class OperationsController extends Controller
 					if(count($tmp) > 0){
 						$user_email = $tmp;
 					}
-					$query->whereIn('users.email', $user_email);
+					$ids = User::select('id')->whereIn('email', $user_email)->get()->pluck('id');
+					$query->whereIn('user_id', $ids);
 				}
 				if($transaction_id != ''){
 					$tmp = explode(",", $transaction_id);
@@ -258,29 +259,40 @@ class OperationsController extends Controller
 	public function multi_pay(Request $request){
 		$data_for_multi_send = [];
 		if(count($request->input('application')) > 0){
+			$ps = 0;
+			$currency = null;
 			foreach($request->input('application') as $row){
 				$history = Users_History::
 						where('id', $row)->
 						where('type', 'WITHDRAW')->
 						whereIn('status', ['pending', 'error'])->
-						whereIn('payment_system', [1,2])->
+						whereIn('payment_system', [1,5,7,9,11,13])->
+						with('payment_system_select')->
 						first();
 				if($history){
-					$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
-					if($wallet){
-						$data_for_multi_send[] = [
-							'id'   => $history->id,
-							'data' => [
-								$wallet, 
-								$history->amount
-							]
-						];
+					if($ps == 0) $ps = $history->payment_system;
+
+					if($ps == $history->payment_system){
+						$wallet = Withdraw::get_wallet($history->user_id, $history->payment_system);
+						if($wallet){
+							$ps = $history->payment_system;
+							$currency = $history->payment_system_select->currency;
+
+							$data_for_multi_send[] = [
+								'id'   => $history->id,
+								'data' => [
+									$wallet, 
+									$history->amount
+								]
+							];
+						}
 					}
 				}
 	    	}
 		}
 		if(count($data_for_multi_send) > 0){
-			Withdraw::done_multi_send($data_for_multi_send);
+			// dd($data_for_multi_send);
+			Withdraw::done_multi_send($data_for_multi_send, $currency);
 			\Session::flash('success','Операции были отправлены на выполнения (смотри статус в истории)');
 		}
 		return redirect()->back();    					

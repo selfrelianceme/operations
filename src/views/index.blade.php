@@ -180,7 +180,7 @@
 			                                    	{{$operations[$row->type]}}
 			                                    	<br/><a href="#informationTransaction" class="show_info_transaction" data-transaction="{{$row->transaction}}" 
 													@if($row->data_info)
-														data-data_info='{{print_r($row->data_info, true)}}'
+														data-full_data_ipn='{{print_r($row->data_info, true)}}'
 													@endif
 			                                    	data-toggle="modal" href="">Данные операции</a>
 			                                    </td>
