@@ -124,7 +124,7 @@ class OperationsController extends Controller
 					$query->where('users__histories.amount', $amount_where, $amount);
 				}
 			})
-			->with(['from_user', 'user'])
+			->with(['from_user', 'user', 'user.upline'])
 			->paginate($per_page);
 	    $history->each(function($row) use ($payment_systems){
 			$find = $payment_systems->where('id', $row->payment_system)->first();

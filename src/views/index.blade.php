@@ -2,6 +2,11 @@
 
 @section('pageTitle', 'Операции')
 @section('content')
+	<style type="text/css">
+		.container-fluid{
+			max-width: 1800px!important;
+		}
+	</style>
 	@push('display')
     	<a href="{{route('AdminOperationsCreate')}}" class="btn hidden-sm-down btn-success"><i class="mdi mdi-plus-circle"></i> Создать операцию</a>
     @endpush
@@ -163,6 +168,8 @@
 	                                    </th>
 	                                    <th>Операция</th>
 	                                    <th>Пользователь</th>
+	                                    <th>Вышестоящий</th>
+	                                    <th>До выплаты</th>
 	                                    <th><a class="do_sorting sorting{{($sort=='amount')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'amount', 'order' => ($sort=='amount' && $order=='asc')?'desc':'asc'])}}" href="#">Сумма</a></th>
 	                                    <th><a class="do_sorting sorting{{($sort=='created_at')?'_'.$order:NULL}}" data-route="{{route('AdminOperations', ['sort' => 'created_at', 'order' => ($sort=='created_at' && $order=='asc')?'desc':'asc'])}}" href="#">Дата</a></th>
 	                                    <th>Статус</th>
@@ -191,6 +198,26 @@
 			                                    	@endif
 			                                    	@if($row->from_user)
 			                                    		от <a href="{{route('AdminUsersEdit', $row->from_user->id)}}">{{$row->from_user->email}}</a>
+			                                    	@endif
+			                                    </td>
+			                                    <td>
+			                                    	@if($row->user->upline->id > 0)
+			                                    		<a target="_blank" href="{{route('AdminUsersEdit', $row->user->upline->id)}}">{{$row->user->upline->email}}</a><br/>
+			                                    	@endif
+			                                    </td>
+			                                    <td>
+			                                    	@if($row->type == 'WITHDRAW')
+			                                    		@php
+															$now = \Carbon\Carbon::now();
+											                $house = \Carbon\Carbon::parse($row->getOriginal('created_at'))->addHours(12);
+											                if($now > $house){
+											                    $row->time_to_pay = 0;
+											                }else{
+											                    $row->time_to_pay = $now->diffInSeconds($house);    
+											                }
+											                
+										                	echo gmdate("H:i:s", $row->time_to_pay);
+			                                    		@endphp
 			                                    	@endif
 			                                    </td>
 			                                    <td>{{$row->payment_system_select['title']}}<br/>{{$row->amount}} {{$row->payment_system_select['currency']}}</td>
